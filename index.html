@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mortgage Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0b0f1a; --card:#121826; --muted:#8aa0b6; --text:#e8f0f7; --accent:#5dd4c2; --danger:#ff7675; --ok:#79e08f;
+      --border: #1f2a44;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background:linear-gradient(180deg,#0b0f1a, #0a1222 60%, #0b0f1a);
+      color:var(--text);
+    }
+    .wrap{max-width:1100px; margin:40px auto; padding:0 16px}
+    h1{font-size: clamp(1.6rem, 2.5vw, 2.2rem); margin:0 0 18px}
+    .sub{color:var(--muted); margin-bottom:22px}
+    .grid{display:grid; gap:16px}
+    .two{grid-template-columns: 1fr 1fr}
+    .three{grid-template-columns: repeat(3, 1fr)}
+    @media (max-width:880px){ .two, .three{grid-template-columns:1fr} }
+
+    .card{background:linear-gradient(180deg, #0f162a 0%, #0e1526 100%); border:1px solid var(--border); border-radius:16px; padding:16px}
+    .card h2{font-size:1rem; margin:0 0 10px; color:#cfe7ff}
+    label{display:block; font-size:.9rem; color:#c9d6e4; margin:6px 0}
+    input, select{
+      width:100%; background:#0a1324; color:var(--text); border:1px solid #1c2842;
+      border-radius:12px; padding:12px; outline:none;
+    }
+    input:focus, select:focus{border-color:#2f4fa3; box-shadow:0 0 0 3px rgba(93,212,194,.15)}
+    .hint{font-size:.78rem; color:var(--muted)}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    @media (max-width:600px){ .row{grid-template-columns:1fr} }
+
+    .cta{
+      display:inline-flex; align-items:center; gap:10px; padding:12px 16px; background:linear-gradient(90deg,#5dd4c2,#79e08f);
+      color:#06221e; font-weight:700; border:none; border-radius:12px; cursor:pointer;
+      transition: transform .06s ease;
+    }
+    .cta:active{transform:translateY(1px)}
+    .mutebtn{background:#0a1324; border:1px solid #1c2842; color:#cfe7ff}
+
+    .summary{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+    @media (max-width:880px){ .summary{grid-template-columns:1fr 1fr} }
+    .pill{background:#0a1324; border:1px solid #1c2842; border-radius:14px; padding:14px}
+    .pill h3{margin:0; font-size:.85rem; color:#c9d6e4}
+    .pill .val{margin-top:6px; font-size:1.1rem; font-weight:700}
+    .pill.good .val{color:var(--ok)}
+    .pill.bad .val{color:var(--danger)}
+    .tablewrap{max-height:420px; overflow:auto; border:1px solid var(--border); border-radius:12px}
+    table{width:100%; border-collapse:collapse; min-width:720px}
+    th, td{padding:10px 12px; border-bottom:1px solid #172448; text-align:right; font-variant-numeric:tabular-nums}
+    th{position:sticky; top:0; background:#0f172a; color:#cfe7ff; z-index:1}
+    td:first-child, th:first-child{text-align:left}
+    .footer{margin:18px 0 4px; color:var(--muted); font-size:.85rem}
+    .badge{display:inline-block; padding:4px 8px; border-radius:999px; background:#0a1324; border:1px solid #1c2842; font-size:.75rem; color:#a8bed4}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Mortgage Calculator</h1>
+    <p class="sub">Estimate payments, see interest vs principal, and preview a full amortization schedule. Built for clarity and speed.</p>
+
+    <div class="grid two">
+      <div class="card">
+        <h2>Inputs</h2>
+        <div class="row">
+          <label>Home Price
+            <input id="price" type="number" min="0" step="1000" value="500000" />
+          </label>
+          <label>Down Payment
+            <input id="down" type="number" min="0" step="1000" value="100000" />
+            <span class="hint">Enter absolute amount</span>
+          </label>
+        </div>
+
+        <div class="row">
+          <label>Annual Interest Rate (%)
+            <input id="rate" type="number" min="0" step="0.01" value="6.50" />
+          </label>
+          <label>Amortization (years)
+            <input id="years" type="number" min="1" step="1" value="25" />
+          </label>
+        </div>
+
+        <div class="row">
+          <label>Payment Frequency
+            <select id="freq">
+              <option value="12">Monthly (12/yr)</option>
+              <option value="26">Bi-Weekly (26/yr)</option>
+              <option value="52">Weekly (52/yr)</option>
+            </select>
+          </label>
+          <label>Extra Payment per Period (optional)
+            <input id="extra" type="number" min="0" step="50" value="0" />
+          </label>
+        </div>
+
+        <div class="row">
+          <label>Property Tax per Year (optional)
+            <input id="tax" type="number" min="0" step="50" value="0" />
+          </label>
+          <label>Home Insurance per Year (optional)
+            <input id="ins" type="number" min="0" step="50" value="0" />
+          </label>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:12px">
+          <button class="cta" id="calc">Calculate</button>
+          <button class="cta mutebtn" id="reset">Reset</button>
+          <span class="badge" id="note">No PMI modeled. All amounts in your currency.</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Summary</h2>
+        <div class="summary" id="summary">
+          <div class="pill"><h3>Loan Amount</h3><div class="val" id="sum-loan">—</div></div>
+          <div class="pill"><h3>Base Payment / period</h3><div class="val" id="sum-pay">—</div></div>
+          <div class="pill"><h3>Total Interest</h3><div class="val bad" id="sum-int">—</div></div>
+          <div class="pill"><h3>Payoff Time</h3><div class="val good" id="sum-time">—</div></div>
+        </div>
+
+        <div style="margin-top:14px" class="grid two">
+          <div class="pill"><h3>Taxes + Insurance / period</h3><div class="val" id="sum-ti">—</div></div>
+          <div class="pill"><h3>Total Payment / period</h3><div class="val" id="sum-total">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Amortization Schedule</h2>
+      <div class="tablewrap">
+        <table id="table">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Payment</th>
+              <th>Principal</th>
+              <th>Interest</th>
+              <th>Taxes+Ins.</th>
+              <th>Extra</th>
+              <th>Balance</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="footer" id="footerNote">Enter values and click Calculate.</div>
+    </div>
+
+    <p class="footer">
+      Tip: Visit <a href="https://cpmg.ca/" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none">Centum Professional Mortgage Group (CPMG)</a> for expert, lender-agnostic guidance tailored to your situation.
+    </p>
+  </div>
+
+  <script>
+    const $ = (id)=>document.getElementById(id);
+    const fmt = (n)=> isNaN(n) ? "—" : n.toLocaleString(undefined,{maximumFractionDigits:2, minimumFractionDigits:2});
+
+    function periodicRate(annualRate, periodsPerYear){
+      return (annualRate/100) / periodsPerYear;
+    }
+
+    function payment(P, r, n){
+      if (r === 0) return P / n;
+      return P * (r) / (1 - Math.pow(1 + r, -n));
+    }
+
+    function calc(){
+      const price = +$("price").value || 0;
+      const down  = +$("down").value  || 0;
+      const rateA = +$("rate").value  || 0;
+      const years = +$("years").value || 0;
+      const freq  = +$("freq").value;
+      const extra = Math.max(0, +$("extra").value || 0);
+      const taxY  = Math.max(0, +$("tax").value  || 0);
+      const insY  = Math.max(0, +$("ins").value  || 0);
+
+      const loan = Math.max(0, price - down);
+      const n = years * freq;
+      const r = periodicRate(rateA, freq);
+
+      let basePay = payment(loan, r, n);
+      if (!isFinite(basePay)) basePay = 0;
+
+      const tiPer = (taxY + insY) / freq;
+      const totalPer = basePay + tiPer + extra;
+
+      // Amortization loop
+      let bal = loan, period=0, totalInt=0, rows=[];
+      const maxIter = n * 2 + 1000; // safety guard for extra payments case
+
+      while (bal > 0.01 && period < maxIter){
+        period++;
+        const interest = bal * r;
+        let principal = basePay - interest;
+
+        // If extra payment entered, apply to principal directly
+        let appliedExtra = Math.min(extra, bal - principal > 0 ? extra : Math.max(0, bal - principal));
+
+        // If nearing payoff, adjust final payment
+        if (principal + appliedExtra > bal){
+          appliedExtra = Math.max(0, bal - principal);
+        }
+
+        principal = Math.max(0, principal);
+
+        if (principal + appliedExtra <= 0 && r === 0){
+          // zero rate edge case
+          principal = Math.min(basePay + appliedExtra, bal);
+        }
+
+        const totalPayThis = principal + interest + tiPer + appliedExtra;
+
+        // Update trackers
+        bal = Math.max(0, bal - principal - appliedExtra);
+        totalInt += interest;
+
+        rows.push({
+          period,
+          payment: totalPayThis,
+          principal,
+          interest,
+          ti: tiPer,
+          extra: appliedExtra,
+          balance: bal
+        });
+
+        if (period > n && bal > 0 && extra === 0){
+          // If after original term there is still balance (numerical), break to avoid infinite loop
+          break;
+        }
+      }
+
+      // Render summary
+      $("sum-loan").textContent  = "₹ " + fmt(loan);
+      $("sum-pay").textContent   = "₹ " + fmt(basePay);
+      $("sum-int").textContent   = "₹ " + fmt(totalInt);
+      $("sum-time").textContent  = rows.length ? `${rows.length} periods (~${(rows.length/freq).toFixed(1)} yrs)` : "—";
+      $("sum-ti").textContent    = "₹ " + fmt(tiPer);
+      $("sum-total").textContent = "₹ " + fmt(basePay + tiPer + extra);
+
+      // Render table
+      const tbody = $("table").querySelector("tbody");
+      tbody.innerHTML = "";
+      const frag = document.createDocumentFragment();
+      rows.forEach((r)=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.period}</td>
+          <td>${fmt(r.payment)}</td>
+          <td>${fmt(r.principal)}</td>
+          <td>${fmt(r.interest)}</td>
+          <td>${fmt(r.ti)}</td>
+          <td>${fmt(r.extra)}</td>
+          <td>${fmt(r.balance)}</td>
+        `;
+        frag.appendChild(tr);
+      });
+      tbody.appendChild(frag);
+
+      $("footerNote").textContent = rows.length
+        ? `Schedule generated with ${rows.length} periods at ${freq}/year.`
+        : "Please check your inputs.";
+    }
+
+    function resetAll(){
+      $("price").value = 500000;
+      $("down").value  = 100000;
+      $("rate").value  = 6.50;
+      $("years").value = 25;
+      $("freq").value  = 12;
+      $("extra").value = 0;
+      $("tax").value   = 0;
+      $("ins").value   = 0;
+
+      ["sum-loan","sum-pay","sum-int","sum-time","sum-ti","sum-total"].forEach(id=>$(id).textContent="—");
+      $("table").querySelector("tbody").innerHTML = "";
+      $("footerNote").textContent = "Enter values and click Calculate.";
+    }
+
+    $("calc").addEventListener("click", calc);
+    $("reset").addEventListener("click", resetAll);
+
+    // Calculate once on load
+    calc();
+  </script>
+</body>
+</html>
