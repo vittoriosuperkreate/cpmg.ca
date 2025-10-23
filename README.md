@@ -11,9 +11,6 @@ The tool helps Canadians calculate mortgage payments, analyze interest costs, an
 
 The goal of this project is to create a clean, responsive, and SEO-friendly web application that complements CPMG’s mission of providing transparent and professional mortgage guidance to Canadian homeowners.
 
-🌐 Live Demo
-
-👉 Try Now: https://cpmg.ca/
 
 ⚙️ Tech Stack
 
@@ -49,8 +46,8 @@ mortgage-calculator/
 
 Centum Professional Mortgage Group (CPMG)
 📍 Lethbridge, Alberta, Canada
-📞 +1 (403) 942-4099
-📩 info@cpmg.ca
+📞 +1 403-380-4413
+📩 vittorio@cpmg.ca
 
 🌐 https://cpmg.ca/
 
